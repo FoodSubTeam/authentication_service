@@ -1,0 +1,23 @@
+apiVersion: skaffold/v2beta26
+kind: Config
+metadata:
+  name: authentications-service
+
+build:
+  artifacts:
+    - image: authentication-service
+      context: .
+      docker:
+        dockerfile: Dockerfile
+
+deploy:
+  kubectl:
+    manifests:
+      - ./configuration/deployment.yaml
+      - ./configuration/service.yaml
+
+portForward:
+  - resourceType: service
+    resourceName: authentication-service
+    port: 80
+    localPort: 8000

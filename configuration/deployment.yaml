@@ -17,3 +17,6 @@ spec:
           image: authentication-service
           ports:
             - containerPort: 8000
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka-service.kafka.svc.cluster.local:9092

@@ -1,4 +1,4 @@
-fastapi
+fastapi~=0.115.12
 uvicorn[standard]
 sqlalchemy[asyncio]
 asyncpg
@@ -9,3 +9,4 @@ aiokafka
 Flask>=2.2.2
 google-auth==1.27.0
 google-auth-oauthlib==0.4.2
+requests~=2.32.3

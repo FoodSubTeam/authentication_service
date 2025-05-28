@@ -1,7 +1,7 @@
 apiVersion: skaffold/v2beta26
 kind: Config
 metadata:
-  name: authentications-service
+  name: authentication-service
 
 build:
   artifacts:

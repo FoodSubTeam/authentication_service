@@ -18,5 +18,15 @@ spec:
           ports:
             - containerPort: 8000
           env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: database_url
+            - name: AUTH_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: auth_secret_key
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: kafka-service.kafka.svc.cluster.local:9092

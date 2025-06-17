@@ -1,15 +1,21 @@
-import os
-import pathlib
 from fastapi import FastAPI, Request, status
 from fastapi.responses import RedirectResponse
-import logging
+from google_auth_oauthlib.flow import Flow
 from app.topics import Topic, MessageType
 from app.kafka import init_topics, KafkaProducerSingleton
-from google_auth_oauthlib.flow import Flow
+from app.service import AuthUserService
+from app.routes import router
+from app.database import engine
+from app.models import Base
 import requests
 import json
+import logging
+import os
+import pathlib
 
 app = FastAPI()
+
+app.include_router(router)
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -23,9 +29,15 @@ async def root():
 
 @app.on_event("startup")
 async def on_startup():
+    service = AuthUserService()
     logging.getLogger("aiokafka").setLevel(logging.WARNING)
+    
+    async with engine.begin() as conn:
+        # await conn.run_sync(Base.metadata.drop_all)  # Uncomment to reset database entries
+        await conn.run_sync(Base.metadata.create_all)
 
     init_topics()
+    await service.create_default_admin()
 
 @app.get("/login")
 async def login():

@@ -10,3 +10,5 @@ Flask>=2.2.2
 google-auth==1.27.0
 google-auth-oauthlib==0.4.2
 requests~=2.32.3
+python-jose
+passlib

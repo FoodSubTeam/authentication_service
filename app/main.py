@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from google_auth_oauthlib.flow import Flow
 from app.topics import Topic, MessageType
 from app.kafka import init_topics, KafkaProducerSingleton
@@ -7,6 +8,7 @@ from app.service import AuthUserService
 from app.routes import router
 from app.database import engine
 from app.models import Base
+from app.security_config import create_access_token
 import requests
 import json
 import logging
@@ -14,6 +16,18 @@ import os
 import pathlib
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:8082",  # frontend origin
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],    # or specify ['GET', 'POST', 'OPTIONS']
+    allow_headers=["*"],    # or specify headers you expect
+)
 
 app.include_router(router)
 
@@ -77,8 +91,12 @@ async def callback(request: Request):
     )
 
     user_info = userinfo_response.json()
+    email = user_info.get("email")
+    id = user_info.get("id")
 
     KafkaProducerSingleton.produce_message(Topic.USER_LOGIN.value, json.dumps(user_info))
     logging.warning("Sent user information message.")
 
-    return user_info
+    jwt_token = create_access_token(data={"sub": str(id), "email": email, "role": "customer"})
+
+    return JSONResponse({"access_token": jwt_token, "token_type": "bearer", "role": "customer"})

@@ -62,7 +62,7 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
         "role": user.role
     })
 
-    return {"access_token": token, "token_type": "bearer"}
+    return {"access_token": token, "token_type": "bearer", "role": user.role}
 
 
 @router.post("/auth/create_user")

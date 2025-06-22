@@ -23,4 +23,27 @@ class AuthUserService():
                 print("✅ Default admin created")
             else:
                 print("ℹ️ Admin already exists")
+
+    
+    async def create_social_account(self, user_info):
+        async with SessionLocal() as session:
+            email = user_info.get("email")
+            result = await session.execute(select(AuthUser).where(AuthUser.email == email))
+            user = result.scalar_one_or_none()
+
+            if not user:
+                new_user = AuthUser(
+                    email=email,
+                    password_hash="",
+                    role="customer",
+                    is_active=True
+                )
+                session.add(new_user)
+                await session.commit()
+                print("✅ Social user created")
+                return new_user
+            else:
+                print(f"ℹ️ User {email} already exists")
+                return user
+            
     

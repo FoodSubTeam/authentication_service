@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 
 class AuthUserSchema(BaseModel):
     first_name: str
@@ -18,4 +19,10 @@ class LoginRequest(BaseModel):
 class AdminCreateUser(BaseModel):
     email: str
     password: str
-    role: str 
+    role: str
+    kitchen_id: Optional[str] = None
+
+
+class AuthUserData(BaseModel):
+    email: str
+    role: str

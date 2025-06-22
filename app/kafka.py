@@ -33,6 +33,6 @@ def setup_topic(topic_name: str):
 
 
 def init_topics():
-    required_topics = [Topic.AUTH_LOGIN_URL.value, Topic.USER_LOGIN.value]
+    required_topics = [Topic.USER_LOGIN.value]
     for topic in required_topics:
         setup_topic(topic)

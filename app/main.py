@@ -37,13 +37,15 @@ GOOGLE_CLIENT_ID = "671569470358-rclf8o03n048o6odmiiumbme8np4e9dp.apps.googleuse
 
 client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "../client_secret.json")
 
+service = AuthUserService()
+
+
 @app.get("/")
 async def root():
     return {"message": "Auth service is running"}
 
 @app.on_event("startup")
 async def on_startup():
-    service = AuthUserService()
     logging.getLogger("aiokafka").setLevel(logging.WARNING)
     
     async with engine.begin() as conn:
@@ -62,13 +64,13 @@ async def login():
     )
     auth_url, state = flow.authorization_url()
 
-    message = {
-        "type": MessageType.SEND_AUTH_URL.value,
-        "data": auth_url
-    }
+    # message = {
+    #     "type": MessageType.SEND_AUTH_URL.value,
+    #     "data": auth_url
+    # }
 
-    KafkaProducerSingleton.produce_message(Topic.AUTH_LOGIN_URL.value, json.dumps(message))
-    logging.warning("Sent authentication link message.")
+    # KafkaProducerSingleton.produce_message(Topic.AUTH_LOGIN_URL.value, json.dumps(message))
+    # logging.warning("Sent authentication link message.")
 
     return RedirectResponse(auth_url, status_code=status.HTTP_303_SEE_OTHER)
 
@@ -94,9 +96,18 @@ async def callback(request: Request):
     email = user_info.get("email")
     id = user_info.get("id")
 
-    KafkaProducerSingleton.produce_message(Topic.USER_LOGIN.value, json.dumps(user_info))
+    user = service.create_social_account(user_info)
+
+    user_info["auth_user_id"] = user.id
+    
+    message = {
+        "type": MessageType.GENERATE_USER_INFO.value,
+        "data": user_info
+    }
+
+    KafkaProducerSingleton.produce_message(Topic.USER_LOGIN.value, json.dumps(message))
     logging.warning("Sent user information message.")
 
-    jwt_token = create_access_token(data={"sub": str(id), "email": email, "role": "customer"})
+    jwt_token = await create_access_token(data={"sub": str(id), "email": email, "role": "customer"})
 
-    return JSONResponse({"access_token": jwt_token, "token_type": "bearer", "role": "customer"})
+    return JSONResponse({"access_token": jwt_token, "token_type": "bearer", "role": "customer", "user_id": user.id})
